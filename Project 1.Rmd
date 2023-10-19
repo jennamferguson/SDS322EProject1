@@ -1,0 +1,95 @@
+---
+title: "Project 1: College Sports"
+author: "Jenna Ferguson, Rosheen Barazi, Aven Williams"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,  
+                      warning = FALSE, message = FALSE, 
+                      fig.align = "center",
+                      R.options = list(max.print=100))
+
+```
+
+# Introduction
+
+------------------------------------------------------------------------
+
+# Merging Data
+
+Before joining these datasets, each dataset had the following unique observations:
+
+-   College Data: 777
+-   Football: 130
+-   Basketball: 368
+
+In order to merge these datasets, the names of the colleges had to be changed within each dataset to match the style across all three datasets. In the football and basketball dataset, the names appeared in shorthand, and not include "University", whereas in the college data set, names appeared as "University of" and usually contained the city that the college was located in.
+
+We decided to commit these changes manually within the csv files. We used the college football dataset, which had the least amount of unique values, and changed the values that occured in all 3 datasets to be in the same format. Therefore, when we merged the datasets on college name, they would merge correctly.
+
+```{r include = FALSE}
+
+library(skimr)
+
+#read in college data
+college_data <- read_csv('College Data.csv')
+
+#read in football data
+football <- read_csv('college_football_19 (1).csv')
+
+#read in basketball data
+basketball <- read_csv('cbb19 (1).csv')
+
+
+```
+
+```{r }
+# merge football and basketball data sets by team
+football_and_basketball <- football %>% 
+  inner_join(basketball, by = c('Team' = 'TEAM'))
+view(football_and_basketball)
+
+```
+
+```{r}
+#merge football and basketball dataset with college data - final merged data set
+college <- football_and_basketball %>% 
+  inner_join(college_data, by = c('Team' = 'X'))
+view(college)
+
+```
+
+------------------------------------------------------------------------
+
+# Tidying Data
+
+```{r}
+#show only the columns that have NA values
+college %>% 
+  select_if(~anyNA(.)) %>%
+  summarise_all(~sum(is.na(.)))
+
+
+```
+
+The only columns in the dataset with NA values is "POSTSEASON" and "SEED"
+
+#Finish this
+
+------------------------------------------------------------------------
+
+# Wrangling
+
+------------------------------------------------------------------------
+
+# Vizualizing
+
+------------------------------------------------------------------------
+
+# Discussion
