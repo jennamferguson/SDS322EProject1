@@ -33,6 +33,14 @@ In order to merge these datasets, the names of the colleges had to be changed wi
 
 We decided to commit these changes manually within the csv files. We used the college football dataset, which had the least amount of unique values, and changed the values that occured in all 3 datasets to be in the same format. Therefore, when we merged the datasets on college name, they would merge correctly.
 
+When merging, the following amount of obersvations from each dataset was lost:
+
+- College Data: 694
+- Football: 47
+- Basketball: 285
+
+The reason that this large quantity of observations was lost was due to the limited occurance of a certain college in all 3 datasets. The Basketball dataset contained nearly all of the colleges that were in the Football dataset, but College Data, although it had the largest number of unique observations, lacked data from many of the colleges present in Football and Basketball.
+
 ```{r include = FALSE}
 
 library(skimr)
@@ -64,6 +72,24 @@ college <- football_and_basketball %>%
 view(college)
 
 ```
+
+
+The Football and Basketball datasets both have an ID for number of games played and wins. Only the Football dataset had both wins and losses. 
+
+```{r}
+
+college <- college %>% 
+  rename(
+    num_games_fb = Games,
+    num_games_bb = G,
+    num_wins_fb = Win,
+    num_wins_bb = W,
+    num_loss_fb = Loss
+  ) %>% 
+  mutate(num_loss_bb = num_games_bb - num_wins_bb)
+
+```
+
 
 ------------------------------------------------------------------------
 
