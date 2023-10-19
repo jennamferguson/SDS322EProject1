@@ -1,5 +1,5 @@
 ---
-title: "Project 1: College Sports"
+title: "Project 1: Impact of Football and Men's Basketball Outcomes on College Interest"
 author: "Jenna Ferguson, Rosheen Barazi, Aven Williams"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -35,16 +35,16 @@ We decided to commit these changes manually within the csv files. We used the co
 
 When merging, the following amount of obersvations from each dataset was lost:
 
-- College Data: 694
-- Football: 47
-- Basketball: 285
+-   College Data: 694
+-   Football: 47
+-   Basketball: 285
 
-The reason that this large quantity of observations was lost was due to the limited occurance of a certain college in all 3 datasets. The Basketball dataset contained nearly all of the colleges that were in the Football dataset, but College Data, although it had the largest number of unique observations, lacked data from many of the colleges present in Football and Basketball.
+The reason that this large quantity of observations was lost was due to the limited occurances of a certain college in all 3 datasets. The Basketball dataset contained nearly all of the colleges that were in the Football dataset, but College Data, although it had the largest number of unique observations, lacked data from many of the colleges present in Football and Basketball.
 
 ```{r include = FALSE}
 
 library(skimr)
-library(readr)
+library(tidyverse)
 
 #read in college data
 college_data <- read_csv('College Data.csv')
@@ -53,14 +53,12 @@ college_data <- read_csv('College Data.csv')
 football <- read_csv('college_football_19 (1).csv')
 
 #read in basketball data
-basketball <- read_csv('cbb19.csv')
+basketball <- read_csv('cbb19 (1).csv')
 
 
 ```
 
 ```{r }
-library(dplyr)
-library(tidyverse)
 # merge football and basketball data sets by team
 football_and_basketball <- football %>% 
   inner_join(basketball, by = c('Team' = 'TEAM'))
@@ -70,15 +68,13 @@ view(football_and_basketball)
 
 ```{r}
 #merge football and basketball dataset with college data - final merged data set
-college_data <- college_data %>% rename(College = ...1)
 college <- football_and_basketball %>% 
-  inner_join(college_data, by = c('Team' = 'College'))
+  inner_join(college_data, by = c('Team' = 'X'))
 view(college)
 
 ```
 
-
-The Football and Basketball datasets both have an ID for number of games played and wins. Only the Football dataset had both wins and losses. 
+The Football and Basketball datasets both have an ID for number of games played and wins. Only the Football dataset had both wins and losses.
 
 ```{r}
 
@@ -94,6 +90,11 @@ college <- college %>%
 
 ```
 
+```{r}
+
+skim(college$Private)
+
+```
 
 ------------------------------------------------------------------------
 
@@ -105,20 +106,160 @@ college %>%
   select_if(~anyNA(.)) %>%
   summarise_all(~sum(is.na(.)))
 
-
 ```
 
-The only columns in the dataset with NA values is "POSTSEASON" and "SEED"
+The only columns in the dataset with NA values is "POSTSEASON" and "SEED". This is because not all teams make the postseason, and only the teams that qualify for the playoffs will have data for seed. If the teams don't play in the March Madness tournament, then they will not have a seed.
 
-#Finish this
+```{r}
+
+```
 
 ------------------------------------------------------------------------
 
 # Wrangling
 
+```{r Create Enr Rate}
+#MUTATE
+#create a variable for enrollement rate
+college <- college %>%
+  mutate(enrollment_rate = Enroll / Accept)
+
+```
+
+We chose to create the variable enrollment rate in order to investigate the percent of students who, given the option, would choose attend this school. This is because we are interested in whether or not a school's athletic programs and sporting outcomes are impacting a student's college decisions.
+
+```{r}
+
+college %>% 
+  group_by(Private) %>% 
+  summarize(n = n())
+
+```
+
+
+
 ------------------------------------------------------------------------
 
 # Vizualizing
+
+## One Variable Vizualizations
+
+```{r First Viz - 1 Variable}
+#show distribution of conferences
+college %>% 
+  ggplot() +
+  geom_bar(aes(x = CONF, fill = CONF)) + 
+  labs(title = "Distribution of Conferences",
+       x = "Conference",
+       y = "Frequency",
+       fill = "Conference") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r Second Viz - 1 Variable}
+#show distribtuion of enrollement rates for colleges in dataset
+college %>% 
+  ggplot(aes(x = enrollment_rate)) +
+  geom_histogram(color = 'black', fill = '#cc5500') +
+  labs(title = 'Distribution of Enrollment Rates',
+       x = 'Enrollment Rate (Number of Enrolled / Number of Accepted',
+       y = 'Frequency') + 
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+## Two Variable Visualizations
+
+```{r First Viz - 2 Variables}
+#create plot of football wins versus acceptance rate
+college %>% 
+  ggplot(aes(x = num_wins_fb, y = enrollment_rate)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  labs(title = 'Relationship Between Football Wins and Enrollment Rate',
+       x = 'Number of Football Wins',
+       y = 'Enrollment Rate (Number of Applications / Number of Accepted)') +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+```
+
+```{r Second Viz - 2 Variables}
+# create plot of relation between basketball wins and acceptance rate
+college %>% 
+  ggplot(aes(x = num_wins_bb, y = enrollment_rate)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  labs(title = 'Relationship Between Basketball Wins and Enrollment Rate',
+       x = 'Number of Basketball Wins',
+       y = 'Enrollment Rate (Number of Applications / Number of Accepted)') +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+college %>%
+  mutate(total_wins = num_wins_fb + num_wins_bb) %>%
+  ggplot(aes(x = total_wins, y = Apps)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  labs(title = "Relationship between a School's Combined Football and Men's Basketball \n Wins and the number of Applications in 2019", x = "Combined Football and Basketball Wins (2019)", y = "Total Number of Applications Received (2019)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+## Three Variable Visualizations
+
+```{r First Viz - 3 Variables}
+
+college %>%
+  ggplot(aes(x = num_wins_fb, y = enrollment_rate)) +
+  geom_point(aes(color = CONF)) +
+  geom_smooth(method = 'lm', aes(color = CONF), se = FALSE) +
+  labs(title = 'Relationship Between Number of Football Wins \n and Enrollment Rate by Conference',
+       x = 'Number of Football Wins',
+       y = 'Enrollment Rate \n (Number of Enrolled / Number of Accepted)',
+       color = 'Conference') +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+```{r}
+
+college %>%
+  ggplot(aes(x = num_wins_bb, y = enrollment_rate)) +
+  geom_point(aes(color = CONF)) +
+  geom_smooth(method = 'lm', aes(color = CONF), se = FALSE) +
+  labs(title = 'Relationship Between Number of Basketball Wins \n and Enrollment Rate by Conference',
+       x = 'Number of Basketball Wins',
+       y = 'Enrollment Rate \n (Number of Enrolled / Number of Accepted)',
+       color = 'Conference') +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+For our first 3 variable visualization, 
+
+```{r Second Viz - 3 Variables}
+
+college %>% 
+  ggplot(aes(x = num_wins_fb, y = Apps)) +
+  geom_point(aes(color = CONF)) +
+  facet_wrap(vars(Private)) +
+  geom_smooth(method = 'lm', se = FALSE) + 
+  labs(title = 'Relationship Between Football Wins and Applications for \n Private and Public Schools in 2019',
+       xlab = 'Football Wins',
+       ylab = 'Applications') +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
 
 ------------------------------------------------------------------------
 
